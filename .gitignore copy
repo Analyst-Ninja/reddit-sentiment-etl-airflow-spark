@@ -1,0 +1,5 @@
+.
+.env
+__pycache__
+.mysql-db-
+.postgres-db-volume
