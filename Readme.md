@@ -54,7 +54,7 @@ This project demonstrates an end-to-end ETL (Extract, Transform, Load) pipeline 
 ----------------------------------
 Step 1 - Clone the repository:
 ```bash
-git clone https://github.com/yourusername/reddit-sentiment-analysis.git
+git clone https://github.com/Analyst-Ninja/reddit-sentiment-etl-airflow-spark.git
 ```
 Step 2 - Set up a virtual environment:
 ```bash
