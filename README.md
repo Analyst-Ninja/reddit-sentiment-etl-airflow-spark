@@ -6,7 +6,7 @@
 
 This project demonstrates an end-to-end ETL (Extract, Transform, Load) pipeline for analyzing sentiment on Reddit posts. Using Apache Airflow, we automate the process of extracting data from multiple subreddits, transforming it with PySpark for sentiment analysis (using VADER), and loading the results into MySQL and PostgreSQL databases. Finally, we visualize the sentiment trends with an interactive Power BI dashboard.
 
-![PowerBI Dash](PowerBI%20Dashboard.png)
+![PowerBI Dash](./screenshots/PowerBI%20Dashboard.png)
 
 **🛠️ Technologies Used**
 ---------------------------
@@ -22,7 +22,7 @@ This project demonstrates an end-to-end ETL (Extract, Transform, Load) pipeline 
 **📐 Architecture Diagram**
 ----------------------------------
 
-![Architecture Diagram](Architecture%20Diagram.png)
+![Architecture Diagram](./screenshots/Architecture%20Diagram.png)
 
 **✨ Features**
 ----------------------------------
@@ -98,7 +98,7 @@ airflow webserver & airflow scheduler
 
 **🔄 ETL Workflow Details**
 -------------------------------------
-![Airflow Dag](AirflowDag.png)
+![Airflow Dag](./screenshots/AirflowDag.png)
 
 ### Extract: 
 - Reddit posts are fetched from subreddits such as `data`, `python`, `dataengineering`, and `career`. These can be modified in the DAG file to monitor other subreddits:
