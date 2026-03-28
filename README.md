@@ -72,15 +72,37 @@ Create a .env file with the necessary credentials for Reddit API, MySQL, and Pos
 REDDIT_CLIENT_ID=your_reddit_client_id
 REDDIT_CLIENT_SECRET=your_reddit_client_secret
 REDDIT_USER_AGENT=your_reddit_user_agent
+REDDIT_USERNAME=your_reddit_username
+REDDIT_PASSWORD=your_reddit_password
 MYSQL_HOSTNAME=localhost
+MYSQL_PORT=3306
 MYSQL_DATABASE=mysql_db
 MYSQL_USERNAME=mysql_username
 MYSQL_PASSWORD=mysql_password
 POSTGRES_HOSTNAME=localhost
+POSTGRES_PORT=5432
 POSTGRES_DATABASE=postgres_db
 POSTGRES_USERNAME=postgres_username
 POSTGRES_PASSWORD=postgres_password
 STAGING_AREA=/path/to/staging 			# Where you want to store the staging data
+```
+If you want to run the project with Docker Compose, copy the template and update the values:
+```bash
+cp .env.example .env
+```
+The `docker-compose.yaml` file now loads `.env` into the Airflow containers via `env_file`, so values like `REDDIT_CLIENT_ID`, `MYSQL_HOSTNAME`, `POSTGRES_HOSTNAME`, and `STAGING_AREA` are available through `os.getenv(...)` inside the DAG code.
+
+For Docker Compose, use container-friendly paths and hosts:
+```bash
+MYSQL_HOSTNAME=host.docker.internal
+POSTGRES_HOSTNAME=host.docker.internal
+STAGING_AREA=/opt/airflow/data/reddit_sentiment_etl_w_spark
+```
+
+Then start the stack:
+```bash
+docker compose up airflow-init
+docker compose up
 ```
 Step 5: Start Airflow: Initialize Airflow and copy the DAG to the Airflow DAGs folder:
 ```bash
