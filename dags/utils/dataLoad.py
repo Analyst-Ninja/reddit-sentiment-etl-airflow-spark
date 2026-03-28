@@ -1,29 +1,45 @@
 from datetime import datetime
 import pandas as pd
 import os
+import mysql
+import psycopg2
+
 
 def post_data_insert_function(cursor, connection, schema, tableName, payload, id_col):
     for post in payload:
-        cursor.execute(f"SELECT {id_col} FROM r_posts WHERE {id_col} IN (%s)",(post[id_col],))
+        cursor.execute(
+            f"SELECT {id_col} FROM r_posts WHERE {id_col} IN (%s)", (post[id_col],)
+        )
         exists = cursor.fetchone()
-        
+
         if not exists:
-            sql = f"INSERT INTO {schema}.{tableName} VALUES({'%s,'*len(post)+'%s'})"
+            sql = f"INSERT INTO {schema}.{tableName} VALUES({'%s,' * len(post) + '%s'})"
             dataToInsert = {k: (lambda x: x)(v) for k, v in post.items()}
-            dataToInsert['etl_insert_date'] = str(datetime.now())
+            dataToInsert["etl_insert_date"] = str(datetime.now())
 
             cursor.execute(sql, tuple(dataToInsert.values()))
 
         connection.commit()
     return 0
 
-def loadData(path):
 
+def loadData(path):
     df = pd.read_parquet(path)
     return df
 
-def insertDataToMySQL(cursor, connection):
+
+def insertDataToMySQL():
     df = loadData(f"{os.getenv('STAGING_AREA')}/new_posts.parquet")
+
+    connection = mysql.connector.connect(
+        host=os.getenv("MYSQL_HOSTNAME"),
+        database=os.getenv("MYSQL_DATABASE"),
+        user=os.getenv("MYSQL_USERNAME"),
+        password=os.getenv("MYSQL_PASSWORD"),
+        port=os.getenv("MYSQL_PORT"),
+    )
+
+    cursor = connection.cursor()
 
     create_query = """
         CREATE TABLE IF NOT EXISTS r_posts (
@@ -46,13 +62,28 @@ def insertDataToMySQL(cursor, connection):
         """
 
     cursor.execute(create_query)
-    id_col = df.columns[0] 
-    post_data_insert_function(cursor=cursor,connection=connection, schema='reddit_db', tableName='r_posts', payload=df.to_dict('records'), id_col=id_col)
+    id_col = df.columns[0]
+    post_data_insert_function(
+        cursor=cursor,
+        connection=connection,
+        schema="reddit_db",
+        tableName="r_posts",
+        payload=df.to_dict("records"),
+        id_col=id_col,
+    )
 
 
+def insertDataToPostgreSQL():
+    connection = psycopg2.connect(
+        database=os.getenv("POSTGRES_DATABASE"),
+        user=os.getenv("POSTGRES_USERNAME"),
+        host=os.getenv("POSTGRES_HOSTNAME"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+        port=os.getenv("POSTGRES_PORT"),
+    )
 
+    cursor = connection.cursor()
 
-def insertDataToPostgreSQL(cursor, connection):
     df = loadData(f"{os.getenv('STAGING_AREA')}/transformed_data.parquet")
 
     create_query = """
@@ -68,17 +99,25 @@ def insertDataToPostgreSQL(cursor, connection):
             etl_insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
-    
+
     cursor.execute(create_query)
 
-    id_col = df.columns[0] 
-    post_data_insert_function(cursor=cursor,connection=connection, schema='public', tableName='r_posts', payload=df.to_dict('records'), id_col=id_col)
+    id_col = df.columns[0]
+    post_data_insert_function(
+        cursor=cursor,
+        connection=connection,
+        schema="public",
+        tableName="r_posts",
+        payload=df.to_dict("records"),
+        id_col=id_col,
+    )
 
     return 0
 
 
 def main():
     pass
+
 
 if __name__ == "__main__":
     main()
