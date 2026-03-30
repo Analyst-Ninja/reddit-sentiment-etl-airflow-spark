@@ -97,4 +97,6 @@ def transformData():
         f"{os.getenv('STAGING_AREA')}/transformed_data.parquet"
     )
 
+    spark.stop()
+
     return 0
