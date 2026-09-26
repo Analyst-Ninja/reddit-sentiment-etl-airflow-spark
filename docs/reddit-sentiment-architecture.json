@@ -1,0 +1,395 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Reddit sentiment ETL architecture",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1375,
+      464
+    ],
+    "views": [
+      {
+        "id": "extract-load",
+        "label": "Extract and raw load",
+        "focus": [
+          "reddit",
+          "extract",
+          "new-posts",
+          "mysql"
+        ],
+        "note": "PRAW pulls new posts from four subreddits, stages Parquet, then loads raw rows into MySQL."
+      },
+      {
+        "id": "sentiment",
+        "label": "Spark sentiment",
+        "focus": [
+          "mysql",
+          "spark",
+          "transformed",
+          "postgres"
+        ],
+        "note": "PySpark scores text with a VADER UDF and stages the result before the Postgres load."
+      },
+      {
+        "id": "runtime",
+        "label": "Runtime and orchestration",
+        "focus": [
+          "env",
+          "airflow",
+          "docker",
+          "extract"
+        ],
+        "note": "A custom Airflow image with a JRE runs the daily DAG, with credentials from .env."
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/Analyst-Ninja/reddit-sentiment-etl-airflow-spark",
+      "provider": "github",
+      "revision": "0c9d8c03ba3035d4a625450e8eca74931c1802ee"
+    }
+  },
+  "components": [
+    {
+      "id": "env",
+      "type": "security",
+      "label": ".env secrets",
+      "sublabel": "Reddit · MySQL · Postgres",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": ".env.example"
+        }
+      ]
+    },
+    {
+      "id": "airflow",
+      "type": "cloud",
+      "label": "Airflow scheduler",
+      "sublabel": "daily · 1 retry / 2 min",
+      "brand": "apache-airflow",
+      "pos": [
+        265,
+        40
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "dags/reddit_dag.py",
+          "line": 24,
+          "end_line": 29
+        }
+      ]
+    },
+    {
+      "id": "docker",
+      "type": "external",
+      "label": "Docker image",
+      "sublabel": "airflow 2.10.1 + JRE",
+      "brand": "docker",
+      "pos": [
+        715,
+        40
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "Dockerfile"
+        },
+        {
+          "path": "docker-compose.yaml"
+        }
+      ]
+    },
+    {
+      "id": "reddit",
+      "type": "external",
+      "label": "Reddit API",
+      "sublabel": "OAuth · 4 subreddits",
+      "brand": "reddit",
+      "pos": [
+        40,
+        190
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "extract",
+      "type": "backend",
+      "label": "Extract task",
+      "sublabel": "PRAW → pandas",
+      "brand": "python",
+      "pos": [
+        265,
+        190
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "dags/utils/downloadPosts.py"
+        }
+      ]
+    },
+    {
+      "id": "new-posts",
+      "type": "database",
+      "label": "Staging · raw",
+      "sublabel": "new_posts.parquet",
+      "pos": [
+        490,
+        190
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "mysql",
+      "type": "database",
+      "label": "MySQL",
+      "sublabel": "raw reddit_db.r_posts",
+      "brand": "mysql",
+      "pos": [
+        490,
+        360
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "dags/utils/dataLoad.py",
+          "line": 31,
+          "end_line": 73
+        }
+      ]
+    },
+    {
+      "id": "spark",
+      "type": "backend",
+      "label": "Spark transform",
+      "sublabel": "VADER sentiment UDF",
+      "brand": {
+        "url": "https://spark.apache.org/",
+        "sha256": "ec9b652fe51ef1e34f13f805505e54aace3287ebc839cdb0439bc7f4e88b1155"
+      },
+      "pos": [
+        715,
+        190
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "dags/utils/tranformData.py"
+        }
+      ]
+    },
+    {
+      "id": "transformed",
+      "type": "database",
+      "label": "Staging · scored",
+      "sublabel": "transformed_data.parquet",
+      "pos": [
+        940,
+        190
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "analytics public.r_posts",
+      "brand": "postgresql",
+      "pos": [
+        940,
+        360
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "dags/utils/dataLoad.py",
+          "line": 76,
+          "end_line": 115
+        }
+      ]
+    },
+    {
+      "id": "powerbi",
+      "type": "frontend",
+      "label": "Power BI",
+      "sublabel": "sentiment dashboard",
+      "brand": {
+        "url": "https://app.powerbi.com/",
+        "sha256": "f27f30722b37abebb304c10b7150dbf104983ea07e3f04086103fbfa0aecbcad"
+      },
+      "pos": [
+        1165,
+        360
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "PowerBI/powerbi_dashboard.pbix"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker Compose on EC2 · custom Airflow image",
+      "wraps": [
+        "airflow",
+        "docker",
+        "extract",
+        "new-posts",
+        "spark",
+        "transformed"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "id": "reddit-to-extract",
+      "from": "reddit",
+      "to": "extract",
+      "label": "PRAW",
+      "variant": "emphasis"
+    },
+    {
+      "id": "extract-to-new-posts",
+      "from": "extract",
+      "to": "new-posts",
+      "label": "to_parquet"
+    },
+    {
+      "id": "new-posts-to-mysql",
+      "from": "new-posts",
+      "to": "mysql",
+      "label": "insert",
+      "labelAt": [
+        575,
+        320
+      ]
+    },
+    {
+      "id": "mysql-to-spark",
+      "from": "mysql",
+      "to": "spark",
+      "label": "SELECT *"
+    },
+    {
+      "id": "spark-to-transformed",
+      "from": "spark",
+      "to": "transformed",
+      "label": "overwrite"
+    },
+    {
+      "id": "transformed-to-postgres",
+      "from": "transformed",
+      "to": "postgres",
+      "label": "insert",
+      "labelAt": [
+        1025,
+        320
+      ]
+    },
+    {
+      "id": "postgres-to-powerbi",
+      "from": "postgres",
+      "to": "powerbi",
+      "label": "read",
+      "variant": "emphasis"
+    },
+    {
+      "id": "airflow-to-extract",
+      "from": "airflow",
+      "to": "extract",
+      "label": "daily run",
+      "variant": "dashed",
+      "labelAt": [
+        350,
+        147
+      ]
+    },
+    {
+      "id": "env-to-airflow",
+      "from": "env",
+      "to": "airflow",
+      "label": "env_file",
+      "variant": "security"
+    },
+    {
+      "id": "docker-to-airflow",
+      "from": "docker",
+      "to": "airflow",
+      "label": "build",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "DAG · SentimentAnalysis-Reddit",
+      "items": [
+        "Reddit-API-Data-Extraction",
+        "Data-Ingestion-to-MySQL",
+        "Sentiment-Analysis-Powered-by-Spark",
+        "Postgres-Ingestion-for-Analytical-Processing"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Sentiment rules",
+      "items": [
+        "Only text_content longer than 20 chars",
+        "VADER compound > 0.5 → Positive",
+        "< -0.5 → Negative · else Neutral"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Guarantees",
+      "items": [
+        "Loads skip rows whose id already exists",
+        "Spark session stopped after each run",
+        "Subreddits: python · career · dataengineering · data"
+      ]
+    }
+  ]
+}
